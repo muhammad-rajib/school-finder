@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 
+from app.api.v1.router import api_router
 from app.db.session import check_db_connection
 
 
 app = FastAPI()
+app.include_router(api_router)
 
 
 @app.get("/")

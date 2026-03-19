@@ -73,3 +73,25 @@ def test_get_school_by_id_returns_404_when_not_found() -> None:
         response = client.get(f"/api/v1/schools/{school_id}")
 
     assert response.status_code == 404
+
+
+def test_search_schools_returns_matching_school() -> None:
+    sample_school = {
+        "id": str(uuid4()),
+        "emis_code": "777777",
+        "name": "Kaliganj Govt School",
+        "division": "Dhaka",
+        "district": "Gazipur",
+        "upazila": "Kaliganj",
+        "address": "Kaliganj Bazar, Gazipur",
+        "total_students": 980,
+        "total_teachers": 34,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    with patch("app.api.v1.endpoints.school.search_schools", return_value=[sample_school]):
+        response = client.get("/api/v1/schools?q=kaliganj")
+
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+    assert any(school["name"] == "Kaliganj Govt School" for school in response.json())

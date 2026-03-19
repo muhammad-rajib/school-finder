@@ -42,3 +42,34 @@ def test_get_schools_returns_list() -> None:
 
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+
+
+def test_get_school_by_id_returns_school_when_found() -> None:
+    school_id = uuid4()
+    sample_school = {
+        "id": str(school_id),
+        "emis_code": "654321",
+        "name": "Single School",
+        "division": "Dhaka",
+        "district": "Gazipur",
+        "upazila": "Sreepur",
+        "address": "Main Road, Gazipur",
+        "total_students": 750,
+        "total_teachers": 30,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    with patch("app.api.v1.endpoints.school.get_school_by_id", return_value=sample_school):
+        response = client.get(f"/api/v1/schools/{school_id}")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(school_id)
+
+
+def test_get_school_by_id_returns_404_when_not_found() -> None:
+    school_id = uuid4()
+
+    with patch("app.api.v1.endpoints.school.get_school_by_id", return_value=None):
+        response = client.get(f"/api/v1/schools/{school_id}")
+
+    assert response.status_code == 404

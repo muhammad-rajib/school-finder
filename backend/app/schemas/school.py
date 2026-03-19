@@ -11,9 +11,16 @@ class SchoolResponse(BaseModel):
     division: str | None = None
     district: str | None = None
     upazila: str | None = None
+    union: str | None = None
     address: str | None = None
     total_students: int
     total_teachers: int
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SchoolListResponse(BaseModel):
+    data: list[SchoolResponse]
+    page: int
+    limit: int

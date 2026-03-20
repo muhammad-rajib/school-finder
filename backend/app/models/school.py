@@ -3,7 +3,7 @@ from uuid import UUID as PyUUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, Index, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -39,6 +39,7 @@ class School(Base):
     total_classrooms: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     has_electricity: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     has_water: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    images: Mapped[list["SchoolImage"]] = relationship("SchoolImage", back_populates="school")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

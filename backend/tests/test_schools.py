@@ -32,8 +32,16 @@ def build_school(**overrides):
         "upazila": "Dhanmondi",
         "union": "Ward 1",
         "address": "Road 1, Dhaka",
+        "description": "A leading secondary school in central Dhaka.",
+        "phone": "+8801712345678",
+        "email": "info@sample-school.edu",
+        "website": "https://sample-school.edu",
+        "established_year": 1998,
         "total_students": 500,
         "total_teachers": 25,
+        "total_classrooms": 18,
+        "has_electricity": True,
+        "has_water": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     school.update(overrides)
@@ -49,6 +57,7 @@ def test_get_schools_returns_paginated_response() -> None:
     assert response.status_code == 200
     assert isinstance(response.json()["data"], list)
     assert response.json()["data"][0]["country_code"] == "BD"
+    assert response.json()["data"][0]["description"] == "A leading secondary school in central Dhaka."
     assert response.json()["page"] == 1
     assert response.json()["limit"] == 10
 
@@ -71,6 +80,14 @@ def test_get_school_by_id_returns_school_when_found() -> None:
 
     assert response.status_code == 200
     assert response.json()["id"] == str(school_id)
+    assert response.json()["description"] == "A leading secondary school in central Dhaka."
+    assert response.json()["phone"] == "+8801712345678"
+    assert response.json()["email"] == "info@sample-school.edu"
+    assert response.json()["website"] == "https://sample-school.edu"
+    assert response.json()["established_year"] == 1998
+    assert response.json()["total_classrooms"] == 18
+    assert response.json()["has_electricity"] is True
+    assert response.json()["has_water"] is True
 
 
 def test_get_school_by_id_returns_404_when_not_found() -> None:

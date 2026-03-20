@@ -14,8 +14,16 @@ class SchoolResponse(BaseModel):
     upazila: str | None = None
     union: str | None = None
     address: str | None = None
+    description: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    website: str | None = None
+    established_year: int | None = None
     total_students: int
     total_teachers: int
+    total_classrooms: int
+    has_electricity: bool
+    has_water: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

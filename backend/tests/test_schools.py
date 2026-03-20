@@ -26,6 +26,7 @@ def build_school(**overrides):
         "id": str(uuid4()),
         "emis_code": "123456",
         "name": "Sample School",
+        "country_code": "BD",
         "division": "Dhaka",
         "district": "Dhaka",
         "upazila": "Dhanmondi",
@@ -47,6 +48,7 @@ def test_get_schools_returns_paginated_response() -> None:
 
     assert response.status_code == 200
     assert isinstance(response.json()["data"], list)
+    assert response.json()["data"][0]["country_code"] == "BD"
     assert response.json()["page"] == 1
     assert response.json()["limit"] == 10
 

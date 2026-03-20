@@ -23,6 +23,7 @@ class School(Base):
     id: Mapped[PyUUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     emis_code: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
+    country_code: Mapped[str] = mapped_column(String, default="BD", nullable=False, index=True)
     division: Mapped[str | None] = mapped_column(String(100), index=True, nullable=True)
     district: Mapped[str | None] = mapped_column(String(100), index=True, nullable=True)
     upazila: Mapped[str | None] = mapped_column(String(100), index=True, nullable=True)

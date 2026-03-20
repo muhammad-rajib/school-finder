@@ -8,6 +8,7 @@ class SchoolResponse(BaseModel):
     id: UUID
     emis_code: str
     name: str
+    country_code: str
     division: str | None = None
     district: str | None = None
     upazila: str | None = None

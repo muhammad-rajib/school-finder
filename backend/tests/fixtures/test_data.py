@@ -1,4 +1,5 @@
 from datetime import date, datetime, timezone
+from types import SimpleNamespace
 from uuid import uuid4
 
 
@@ -71,3 +72,17 @@ def build_school_image_data(**overrides: object) -> dict[str, object]:
     }
     image.update(overrides)
     return image
+
+
+def build_user_data(**overrides: object) -> SimpleNamespace:
+    user = {
+        "id": uuid4(),
+        "name": "Admin User",
+        "email": "admin@example.com",
+        "password_hash": "$2b$12$examplehash",
+        "role": "admin",
+        "school_id": None,
+        "is_active": True,
+    }
+    user.update(overrides)
+    return SimpleNamespace(**user)

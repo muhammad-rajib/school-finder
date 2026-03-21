@@ -38,6 +38,8 @@ def build_school(**overrides):
         "website": "https://sample-school.edu",
         "established_year": 1998,
         "total_students": 500,
+        "boys": 260,
+        "girls": 240,
         "total_teachers": 25,
         "total_classrooms": 18,
         "has_electricity": True,
@@ -97,6 +99,26 @@ def test_get_school_by_id_returns_404_when_not_found() -> None:
         response = client.get(f"/api/v1/schools/{school_id}")
 
     assert response.status_code == 404
+
+
+def test_get_student_stats_returns_aggregated_data() -> None:
+    school_id = uuid4()
+    sample_school = build_school(
+        id=str(school_id),
+        total_students=750,
+        boys=390,
+        girls=360,
+    )
+
+    with patch("app.api.v1.endpoints.school.get_school_by_id", return_value=sample_school):
+        response = client.get(f"/api/v1/schools/{school_id}/students")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "total": 750,
+        "boys": 390,
+        "girls": 360,
+    }
 
 
 def test_search_schools_by_name() -> None:

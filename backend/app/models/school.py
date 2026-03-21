@@ -35,6 +35,8 @@ class School(Base):
     website: Mapped[str | None] = mapped_column(String(255), nullable=True)
     established_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     total_students: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    boys: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    girls: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total_teachers: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     total_classrooms: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     has_electricity: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

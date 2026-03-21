@@ -33,3 +33,9 @@ class SchoolListResponse(BaseModel):
     data: list[SchoolResponse]
     page: int
     limit: int
+
+
+class StudentStatsResponse(BaseModel):
+    total: int
+    boys: int
+    girls: int

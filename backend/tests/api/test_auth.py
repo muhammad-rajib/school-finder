@@ -64,3 +64,39 @@ def test_admin_can_create_principal_user(client) -> None:
         "school_id": str(created_user.school_id),
         "is_active": True,
     }
+
+
+def test_admin_can_activate_user(client) -> None:
+    admin_user = build_user_data(role="admin")
+    principal_user = build_user_data(role="principal", school_id=uuid4(), is_active=True)
+
+    with patch("app.api.v1.endpoints.auth.update_user_active_status", return_value=principal_user):
+        app.dependency_overrides[get_current_user] = lambda: admin_user
+        try:
+            response = client.put(
+                f"/api/v1/admin/users/{principal_user.id}/activate",
+                headers={"Authorization": "Bearer fake-token"},
+            )
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is True
+
+
+def test_admin_can_deactivate_user(client) -> None:
+    admin_user = build_user_data(role="admin")
+    principal_user = build_user_data(role="principal", school_id=uuid4(), is_active=False)
+
+    with patch("app.api.v1.endpoints.auth.update_user_active_status", return_value=principal_user):
+        app.dependency_overrides[get_current_user] = lambda: admin_user
+        try:
+            response = client.put(
+                f"/api/v1/admin/users/{principal_user.id}/deactivate",
+                headers={"Authorization": "Bearer fake-token"},
+            )
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is False

@@ -40,6 +40,7 @@ class School(Base):
     has_electricity: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     has_water: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     images: Mapped[list["SchoolImage"]] = relationship("SchoolImage", back_populates="school")
+    teachers: Mapped[list["Teacher"]] = relationship("Teacher", back_populates="school")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

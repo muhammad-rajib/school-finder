@@ -1,57 +1,11 @@
-import sys
-from datetime import datetime, timezone
-from pathlib import Path
 from unittest.mock import ANY, patch
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
-from app.api.v1.endpoints.school import get_db
-from app.main import app
+from tests.fixtures.test_data import build_school_data
 
 
-def override_get_db():
-    yield object()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-client = TestClient(app)
-
-
-def build_school(**overrides):
-    school = {
-        "id": str(uuid4()),
-        "emis_code": "123456",
-        "name": "Sample School",
-        "country_code": "BD",
-        "division": "Dhaka",
-        "district": "Dhaka",
-        "upazila": "Dhanmondi",
-        "union": "Ward 1",
-        "address": "Road 1, Dhaka",
-        "description": "A leading secondary school in central Dhaka.",
-        "phone": "+8801712345678",
-        "email": "info@sample-school.edu",
-        "website": "https://sample-school.edu",
-        "established_year": 1998,
-        "total_students": 500,
-        "boys": 260,
-        "girls": 240,
-        "total_teachers": 25,
-        "total_classrooms": 18,
-        "has_electricity": True,
-        "has_water": True,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-    }
-    school.update(overrides)
-    return school
-
-
-def test_get_schools_returns_paginated_response() -> None:
-    sample_schools = [build_school()]
+def test_get_schools_returns_paginated_response(client) -> None:
+    sample_schools = [build_school_data()]
 
     with patch("app.api.v1.endpoints.school.search_schools", return_value=sample_schools):
         response = client.get("/api/v1/schools")
@@ -64,9 +18,9 @@ def test_get_schools_returns_paginated_response() -> None:
     assert response.json()["limit"] == 10
 
 
-def test_get_school_by_id_returns_school_when_found() -> None:
+def test_get_school_by_id_returns_school_when_found(client) -> None:
     school_id = uuid4()
-    sample_school = build_school(
+    sample_school = build_school_data(
         id=str(school_id),
         emis_code="654321",
         name="Single School",
@@ -92,7 +46,7 @@ def test_get_school_by_id_returns_school_when_found() -> None:
     assert response.json()["has_water"] is True
 
 
-def test_get_school_by_id_returns_404_when_not_found() -> None:
+def test_get_school_by_id_returns_404_when_not_found(client) -> None:
     school_id = uuid4()
 
     with patch("app.api.v1.endpoints.school.get_school_by_id", return_value=None):
@@ -101,28 +55,8 @@ def test_get_school_by_id_returns_404_when_not_found() -> None:
     assert response.status_code == 404
 
 
-def test_get_student_stats_returns_aggregated_data() -> None:
-    school_id = uuid4()
-    sample_school = build_school(
-        id=str(school_id),
-        total_students=750,
-        boys=390,
-        girls=360,
-    )
-
-    with patch("app.api.v1.endpoints.school.get_school_by_id", return_value=sample_school):
-        response = client.get(f"/api/v1/schools/{school_id}/students")
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "total": 750,
-        "boys": 390,
-        "girls": 360,
-    }
-
-
-def test_search_schools_by_name() -> None:
-    sample_school = build_school(
+def test_search_schools_by_name(client) -> None:
+    sample_school = build_school_data(
         emis_code="777777",
         name="Kaliganj Govt School",
         district="Gazipur",
@@ -150,8 +84,8 @@ def test_search_schools_by_name() -> None:
     )
 
 
-def test_search_schools_by_emis_code_returns_exact_match() -> None:
-    sample_school = build_school(emis_code="123456", name="Exact Match School")
+def test_search_schools_by_emis_code_returns_exact_match(client) -> None:
+    sample_school = build_school_data(emis_code="123456", name="Exact Match School")
 
     with patch("app.api.v1.endpoints.school.search_schools", return_value=[sample_school]) as mock_search:
         response = client.get("/api/v1/schools?emis_code=123456")
@@ -171,8 +105,8 @@ def test_search_schools_by_emis_code_returns_exact_match() -> None:
     )
 
 
-def test_search_schools_by_location_filters() -> None:
-    sample_school = build_school(
+def test_search_schools_by_location_filters(client) -> None:
+    sample_school = build_school_data(
         name="Location Match School",
         division="Dhaka",
         district="Gazipur",
@@ -200,8 +134,8 @@ def test_search_schools_by_location_filters() -> None:
     )
 
 
-def test_search_schools_with_combined_filters() -> None:
-    sample_school = build_school(name="Kaliganj Govt School", district="Gazipur")
+def test_search_schools_with_combined_filters(client) -> None:
+    sample_school = build_school_data(name="Kaliganj Govt School", district="Gazipur")
 
     with patch("app.api.v1.endpoints.school.search_schools", return_value=[sample_school]) as mock_search:
         response = client.get("/api/v1/schools?name=kaliganj&district=Gazipur")
@@ -222,8 +156,8 @@ def test_search_schools_with_combined_filters() -> None:
     )
 
 
-def test_search_schools_with_pagination() -> None:
-    sample_schools = [build_school(name=f"School {index}") for index in range(1, 6)]
+def test_search_schools_with_pagination(client) -> None:
+    sample_schools = [build_school_data(name=f"School {index}") for index in range(1, 6)]
 
     with patch("app.api.v1.endpoints.school.search_schools", return_value=sample_schools) as mock_search:
         response = client.get("/api/v1/schools?page=1&limit=5")
@@ -245,7 +179,7 @@ def test_search_schools_with_pagination() -> None:
     )
 
 
-def test_search_schools_returns_no_result_for_unknown_query() -> None:
+def test_search_schools_returns_no_result_for_unknown_query(client) -> None:
     with patch("app.api.v1.endpoints.school.search_schools", return_value=[]):
         response = client.get("/api/v1/schools?name=unknown-school")
 

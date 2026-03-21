@@ -45,6 +45,7 @@ class School(Base):
     notices: Mapped[list["Notice"]] = relationship("Notice", back_populates="school")
     teachers: Mapped[list["Teacher"]] = relationship("Teacher", back_populates="school")
     results: Mapped[list["Result"]] = relationship("Result", back_populates="school")
+    users: Mapped[list["User"]] = relationship("User", back_populates="school")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

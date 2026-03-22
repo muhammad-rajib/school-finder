@@ -57,6 +57,7 @@ def build_result_data(**overrides: object) -> dict[str, object]:
 
 def build_notice_data(**overrides: object) -> dict[str, object]:
     notice = {
+        "id": str(uuid4()),
         "title": "Admission Notice",
         "description": "Class six admission forms are now available.",
         "published_date": date(2026, 3, 21).isoformat(),

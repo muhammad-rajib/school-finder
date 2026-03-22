@@ -112,6 +112,46 @@ def test_principal_cannot_update_teacher_from_other_school(client) -> None:
     assert response.status_code == 403
 
 
+def test_principal_can_delete_teacher_in_own_school(client) -> None:
+    school_id = uuid4()
+    teacher_id = uuid4()
+    principal_user = build_user_data(role="principal", school_id=school_id)
+    existing_teacher = build_teacher_data(id=str(teacher_id), school_id=school_id)
+
+    with (
+        patch("app.api.v1.endpoints.teacher.get_teacher_by_id", return_value=existing_teacher),
+        patch("app.api.v1.endpoints.teacher.delete_teacher", return_value=True),
+    ):
+        app.dependency_overrides[get_current_user] = lambda: principal_user
+        try:
+            response = client.delete(
+                f"/api/v1/teachers/{teacher_id}",
+                headers={"Authorization": "Bearer fake-token"},
+            )
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Teacher deleted successfully"}
+
+
+def test_principal_cannot_delete_teacher_from_other_school(client) -> None:
+    principal_user = build_user_data(role="principal", school_id=uuid4())
+    existing_teacher = build_teacher_data(id=str(uuid4()), school_id=uuid4())
+
+    with patch("app.api.v1.endpoints.teacher.get_teacher_by_id", return_value=existing_teacher):
+        app.dependency_overrides[get_current_user] = lambda: principal_user
+        try:
+            response = client.delete(
+                f"/api/v1/teachers/{existing_teacher['id']}",
+                headers={"Authorization": "Bearer fake-token"},
+            )
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
+
+    assert response.status_code == 403
+
+
 def test_get_teachers_by_school_returns_list(client) -> None:
     school_id = uuid4()
     sample_teachers = [

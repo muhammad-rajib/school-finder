@@ -31,3 +31,7 @@ class TeacherResponse(BaseModel):
     qualification: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TeacherDeleteResponse(BaseModel):
+    message: str

@@ -65,6 +65,18 @@ def test_admin_can_create_teacher_for_given_school(client) -> None:
     assert mock_create_teacher.call_args.args[1] == school_id
 
 
+def test_create_teacher_requires_authentication(client) -> None:
+    response = client.post(
+        "/api/v1/teachers",
+        json={
+            "name": "Ayesha Rahman",
+            "designation": "Assistant Teacher",
+        },
+    )
+
+    assert response.status_code == 401
+
+
 def test_principal_can_update_teacher_in_own_school(client) -> None:
     school_id = uuid4()
     teacher_id = uuid4()

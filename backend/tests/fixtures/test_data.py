@@ -46,6 +46,7 @@ def build_teacher_data(**overrides: object) -> dict[str, object]:
 
 def build_result_data(**overrides: object) -> dict[str, object]:
     result = {
+        "id": str(uuid4()),
         "year": 2025,
         "exam_type": "SSC",
         "pass_rate": 92.5,

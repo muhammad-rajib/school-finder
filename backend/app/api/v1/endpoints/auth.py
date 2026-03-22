@@ -7,15 +7,17 @@ from app.core.security import create_access_token, hash_password, verify_passwor
 from app.dependencies.auth import get_current_user
 from app.db.session import get_db
 from app.models.user import User
+from app.schemas.common import APIResponse
 from app.schemas.user import CreatePrincipalRequest, LoginRequest, TokenResponse, UserResponse
 from app.services.auth_service import create_user, get_user_by_email, update_user_active_status
+from app.utils.responses import success_response
 
 
 router = APIRouter()
 
 
-@router.post("/auth/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+@router.post("/auth/login", response_model=APIResponse[TokenResponse])
+def login(payload: LoginRequest, db: Session = Depends(get_db)) -> dict:
     user = get_user_by_email(db, payload.email)
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
@@ -35,15 +37,18 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
             "role": user.role,
         }
     )
-    return TokenResponse(access_token=access_token, token_type="bearer")
+    return success_response(
+        data=TokenResponse(access_token=access_token, token_type="bearer"),
+        message="Login successful",
+    )
 
 
-@router.post("/admin/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/admin/users", response_model=APIResponse[UserResponse], status_code=status.HTTP_201_CREATED)
 def create_principal_user(
     payload: CreatePrincipalRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> UserResponse:
+) -> dict:
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -65,15 +70,15 @@ def create_principal_user(
         role="principal",
         school_id=payload.school_id,
     )
-    return user
+    return success_response(data=user, message="User created successfully")
 
 
-@router.put("/admin/users/{user_id}/activate", response_model=UserResponse)
+@router.put("/admin/users/{user_id}/activate", response_model=APIResponse[UserResponse])
 def activate_user(
     user_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> UserResponse:
+) -> dict:
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -86,15 +91,15 @@ def activate_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    return user
+    return success_response(data=user, message="User activated successfully")
 
 
-@router.put("/admin/users/{user_id}/deactivate", response_model=UserResponse)
+@router.put("/admin/users/{user_id}/deactivate", response_model=APIResponse[UserResponse])
 def deactivate_user(
     user_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> UserResponse:
+) -> dict:
     if current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -107,4 +112,4 @@ def deactivate_user(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    return user
+    return success_response(data=user, message="User deactivated successfully")

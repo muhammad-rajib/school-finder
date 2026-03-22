@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class SchoolImageResponse(BaseModel):
@@ -8,14 +8,15 @@ class SchoolImageResponse(BaseModel):
     image_url: str
     is_cover: bool
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ImageCreateResponse(BaseModel):
     id: UUID
     image_url: str
     is_cover: bool
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ImageDeleteResponse(BaseModel):

@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.dependencies.auth import get_current_user
 from app.models.user import User
+from app.schemas.common import APIResponse
 from app.schemas.student import StudentStatsResponse, StudentStatsUpdate
 from app.services.student_service import get_student_stats, update_student_stats
+from app.utils.responses import success_response
 
 
 router = APIRouter()
@@ -28,12 +30,12 @@ def _build_student_stats_response(school) -> StudentStatsResponse:
     )
 
 
-@router.get("/schools/{school_id}/students", response_model=StudentStatsResponse)
+@router.get("/schools/{school_id}/students", response_model=APIResponse[StudentStatsResponse])
 def retrieve_student_stats(
     school_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> StudentStatsResponse:
+) -> dict:
     school = get_student_stats(db, school_id)
     if school is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="School not found")
@@ -49,16 +51,19 @@ def retrieve_student_stats(
             detail="Not authorized to access student stats",
         )
 
-    return _build_student_stats_response(school)
+    return success_response(
+        data=_build_student_stats_response(school),
+        message="Student stats retrieved successfully",
+    )
 
 
-@router.put("/schools/{school_id}/students", response_model=StudentStatsResponse)
+@router.put("/schools/{school_id}/students", response_model=APIResponse[StudentStatsResponse])
 def update_school_student_stats(
     school_id: UUID,
     payload: StudentStatsUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> StudentStatsResponse:
+) -> dict:
     if current_user.role == "principal" and current_user.school_id != school_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -74,4 +79,7 @@ def update_school_student_stats(
     if school is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="School not found")
 
-    return _build_student_stats_response(school)
+    return success_response(
+        data=_build_student_stats_response(school),
+        message="Student stats updated successfully",
+    )

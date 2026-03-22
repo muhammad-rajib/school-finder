@@ -30,6 +30,6 @@ class SchoolResponse(BaseModel):
 
 
 class SchoolListResponse(BaseModel):
-    data: list[SchoolResponse]
+    schools: list[SchoolResponse]
     page: int
     limit: int

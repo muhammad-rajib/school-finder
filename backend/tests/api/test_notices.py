@@ -31,7 +31,8 @@ def test_principal_can_create_notice_for_own_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 201
-    assert response.json()["title"] == "Admission Notice"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["title"] == "Admission Notice"
     mock_create_notice.assert_called_once()
     assert mock_create_notice.call_args.args[1] == school_id
 
@@ -62,7 +63,8 @@ def test_principal_can_update_notice_in_own_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json()["title"] == "Updated Notice"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["title"] == "Updated Notice"
 
 
 def test_principal_can_delete_notice_in_own_school(client) -> None:
@@ -85,7 +87,11 @@ def test_principal_can_delete_notice_in_own_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Notice deleted successfully"}
+    assert response.json() == {
+        "success": True,
+        "data": {"message": "Notice deleted successfully"},
+        "message": "Notice deleted successfully",
+    }
 
 
 def test_get_notices_by_school_returns_list(client) -> None:
@@ -110,14 +116,16 @@ def test_get_notices_by_school_returns_list(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 2
+    assert response.json()["success"] is True
+    assert isinstance(response.json()["data"], list)
+    assert len(response.json()["data"]) == 2
 
 
 def test_notice_routes_require_authentication(client) -> None:
     response = client.get(f"/api/v1/schools/{uuid4()}/notices")
 
     assert response.status_code == 401
+    assert response.json()["success"] is False
 
 
 def test_principal_cannot_access_other_school_notices(client) -> None:
@@ -136,3 +144,4 @@ def test_principal_cannot_access_other_school_notices(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 403
+    assert response.json()["success"] is False

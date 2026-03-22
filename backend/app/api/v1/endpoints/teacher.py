@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.dependencies.auth import get_current_user
 from app.db.session import get_db
 from app.models.user import User
+from app.schemas.common import APIResponse
 from app.schemas.teacher import (
     TeacherCreate,
     TeacherDeleteResponse,
@@ -19,17 +20,18 @@ from app.services.teacher_service import (
     get_teachers_by_school,
     update_teacher,
 )
+from app.utils.responses import success_response
 
 
 router = APIRouter()
 
 
-@router.post("/teachers", response_model=TeacherResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/teachers", response_model=APIResponse[TeacherResponse], status_code=status.HTTP_201_CREATED)
 def create_school_teacher(
     payload: TeacherCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> TeacherResponse:
+) -> dict:
     if current_user.role == "principal":
         if current_user.school_id is None:
             raise HTTPException(
@@ -51,16 +53,17 @@ def create_school_teacher(
         )
 
     teacher_data = payload.model_dump(exclude={"school_id"})
-    return create_teacher(db, school_id, teacher_data)
+    teacher = create_teacher(db, school_id, teacher_data)
+    return success_response(data=teacher, message="Teacher created successfully")
 
 
-@router.put("/teachers/{teacher_id}", response_model=TeacherResponse)
+@router.put("/teachers/{teacher_id}", response_model=APIResponse[TeacherResponse])
 def update_school_teacher(
     teacher_id: UUID,
     payload: TeacherUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> TeacherResponse:
+) -> dict:
     teacher = get_teacher_by_id(db, teacher_id)
     if teacher is None:
         raise HTTPException(
@@ -88,15 +91,15 @@ def update_school_teacher(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Teacher not found",
         )
-    return updated_teacher
+    return success_response(data=updated_teacher, message="Teacher updated successfully")
 
 
-@router.delete("/teachers/{teacher_id}", response_model=TeacherDeleteResponse)
+@router.delete("/teachers/{teacher_id}", response_model=APIResponse[TeacherDeleteResponse])
 def delete_school_teacher(
     teacher_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> TeacherDeleteResponse:
+) -> dict:
     teacher = get_teacher_by_id(db, teacher_id)
     if teacher is None:
         raise HTTPException(
@@ -125,9 +128,15 @@ def delete_school_teacher(
             detail="Teacher not found",
         )
 
-    return TeacherDeleteResponse(message="Teacher deleted successfully")
+    return success_response(
+        data=TeacherDeleteResponse(message="Teacher deleted successfully"),
+        message="Teacher deleted successfully",
+    )
 
 
-@router.get("/schools/{school_id}/teachers", response_model=list[TeacherResponse])
-def list_school_teachers(school_id: UUID, db: Session = Depends(get_db)) -> list[TeacherResponse]:
-    return get_teachers_by_school(db, school_id)
+@router.get("/schools/{school_id}/teachers", response_model=APIResponse[list[TeacherResponse]])
+def list_school_teachers(school_id: UUID, db: Session = Depends(get_db)) -> dict:
+    return success_response(
+        data=get_teachers_by_school(db, school_id),
+        message="Teachers retrieved successfully",
+    )

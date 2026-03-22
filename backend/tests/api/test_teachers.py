@@ -31,7 +31,8 @@ def test_principal_can_create_teacher_for_own_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 201
-    assert response.json()["name"] == "Sample Teacher"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["name"] == "Sample Teacher"
     mock_create_teacher.assert_called_once()
     assert mock_create_teacher.call_args.args[1] == school_id
 
@@ -60,7 +61,8 @@ def test_admin_can_create_teacher_for_given_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 201
-    assert response.json()["designation"] == "Assistant Teacher"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["designation"] == "Assistant Teacher"
     mock_create_teacher.assert_called_once()
     assert mock_create_teacher.call_args.args[1] == school_id
 
@@ -75,6 +77,7 @@ def test_create_teacher_requires_authentication(client) -> None:
     )
 
     assert response.status_code == 401
+    assert response.json()["success"] is False
 
 
 def test_principal_can_update_teacher_in_own_school(client) -> None:
@@ -103,7 +106,8 @@ def test_principal_can_update_teacher_in_own_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json()["name"] == "Updated Teacher"
+    assert response.json()["success"] is True
+    assert response.json()["data"]["name"] == "Updated Teacher"
 
 
 def test_principal_cannot_update_teacher_from_other_school(client) -> None:
@@ -122,6 +126,7 @@ def test_principal_cannot_update_teacher_from_other_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 403
+    assert response.json()["success"] is False
 
 
 def test_principal_can_delete_teacher_in_own_school(client) -> None:
@@ -144,7 +149,11 @@ def test_principal_can_delete_teacher_in_own_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Teacher deleted successfully"}
+    assert response.json() == {
+        "success": True,
+        "data": {"message": "Teacher deleted successfully"},
+        "message": "Teacher deleted successfully",
+    }
 
 
 def test_principal_cannot_delete_teacher_from_other_school(client) -> None:
@@ -162,6 +171,7 @@ def test_principal_cannot_delete_teacher_from_other_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 403
+    assert response.json()["success"] is False
 
 
 def test_get_teachers_by_school_returns_list(client) -> None:
@@ -178,5 +188,6 @@ def test_get_teachers_by_school_returns_list(client) -> None:
         response = client.get(f"/api/v1/schools/{school_id}/teachers")
 
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 2
+    assert response.json()["success"] is True
+    assert isinstance(response.json()["data"], list)
+    assert len(response.json()["data"]) == 2

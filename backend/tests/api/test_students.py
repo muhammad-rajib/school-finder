@@ -29,9 +29,13 @@ def test_get_student_stats_returns_aggregated_data(client) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "total": 750,
-        "boys": 390,
-        "girls": 360,
+        "success": True,
+        "data": {
+            "total": 750,
+            "boys": 390,
+            "girls": 360,
+        },
+        "message": "Student stats retrieved successfully",
     }
 
 
@@ -58,9 +62,13 @@ def test_update_student_stats_returns_updated_data(client) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "total": 800,
-        "boys": 410,
-        "girls": 390,
+        "success": True,
+        "data": {
+            "total": 800,
+            "boys": 410,
+            "girls": 390,
+        },
+        "message": "Student stats updated successfully",
     }
 
 
@@ -70,6 +78,7 @@ def test_student_stats_requires_authentication(client) -> None:
     response = client.get(f"/api/v1/schools/{school_id}/students")
 
     assert response.status_code == 401
+    assert response.json()["success"] is False
 
 
 def test_principal_cannot_access_other_school_student_stats(client) -> None:
@@ -88,3 +97,4 @@ def test_principal_cannot_access_other_school_student_stats(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 403
+    assert response.json()["success"] is False

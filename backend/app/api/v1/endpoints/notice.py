@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.dependencies.auth import get_current_user
 from app.db.session import get_db
 from app.models.user import User
+from app.schemas.common import APIResponse
 from app.schemas.notice import NoticeCreate, NoticeDeleteResponse, NoticeResponse, NoticeUpdate
 from app.services.notice_service import (
     create_notice,
@@ -14,17 +15,18 @@ from app.services.notice_service import (
     get_notices_by_school,
     update_notice,
 )
+from app.utils.responses import success_response
 
 
 router = APIRouter()
 
 
-@router.post("/notices", response_model=NoticeResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/notices", response_model=APIResponse[NoticeResponse], status_code=status.HTTP_201_CREATED)
 def create_school_notice(
     payload: NoticeCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> NoticeResponse:
+) -> dict:
     if current_user.role == "principal":
         if current_user.school_id is None:
             raise HTTPException(
@@ -46,16 +48,17 @@ def create_school_notice(
         )
 
     notice_data = payload.model_dump(exclude={"school_id"})
-    return create_notice(db, school_id, notice_data)
+    notice = create_notice(db, school_id, notice_data)
+    return success_response(data=notice, message="Notice created successfully")
 
 
-@router.put("/notices/{notice_id}", response_model=NoticeResponse)
+@router.put("/notices/{notice_id}", response_model=APIResponse[NoticeResponse])
 def update_school_notice(
     notice_id: UUID,
     payload: NoticeUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> NoticeResponse:
+) -> dict:
     notice = get_notice_by_id(db, notice_id)
     if notice is None:
         raise HTTPException(
@@ -83,15 +86,15 @@ def update_school_notice(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Notice not found",
         )
-    return updated_notice
+    return success_response(data=updated_notice, message="Notice updated successfully")
 
 
-@router.delete("/notices/{notice_id}", response_model=NoticeDeleteResponse)
+@router.delete("/notices/{notice_id}", response_model=APIResponse[NoticeDeleteResponse])
 def delete_school_notice(
     notice_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> NoticeDeleteResponse:
+) -> dict:
     notice = get_notice_by_id(db, notice_id)
     if notice is None:
         raise HTTPException(
@@ -120,15 +123,18 @@ def delete_school_notice(
             detail="Notice not found",
         )
 
-    return NoticeDeleteResponse(message="Notice deleted successfully")
+    return success_response(
+        data=NoticeDeleteResponse(message="Notice deleted successfully"),
+        message="Notice deleted successfully",
+    )
 
 
-@router.get("/schools/{school_id}/notices", response_model=list[NoticeResponse])
+@router.get("/schools/{school_id}/notices", response_model=APIResponse[list[NoticeResponse]])
 def list_school_notices(
     school_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> list[NoticeResponse]:
+) -> dict:
     if current_user.role == "principal" and current_user.school_id != school_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -140,4 +146,7 @@ def list_school_notices(
             detail="Not authorized to access notices",
         )
 
-    return get_notices_by_school(db, school_id)
+    return success_response(
+        data=get_notices_by_school(db, school_id),
+        message="Notices retrieved successfully",
+    )

@@ -27,8 +27,9 @@ def test_principal_can_upload_school_image(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 201
-    assert response.json()["image_url"] == created_image["image_url"]
-    assert response.json()["is_cover"] is False
+    assert response.json()["success"] is True
+    assert response.json()["data"]["image_url"] == created_image["image_url"]
+    assert response.json()["data"]["is_cover"] is False
 
 
 def test_principal_cannot_upload_image_for_other_school(client) -> None:
@@ -46,6 +47,7 @@ def test_principal_cannot_upload_image_for_other_school(client) -> None:
         app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 403
+    assert response.json()["success"] is False
 
 
 def test_school_image_upload_requires_authentication(client) -> None:
@@ -57,6 +59,7 @@ def test_school_image_upload_requires_authentication(client) -> None:
     )
 
     assert response.status_code == 401
+    assert response.json()["success"] is False
 
 
 def test_principal_can_delete_school_image(client) -> None:
@@ -79,7 +82,11 @@ def test_principal_can_delete_school_image(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json() == {"message": "Image deleted"}
+    assert response.json() == {
+        "success": True,
+        "data": {"message": "Image deleted"},
+        "message": "Image deleted",
+    }
 
 
 def test_principal_cannot_delete_image_from_other_school(client) -> None:
@@ -97,6 +104,7 @@ def test_principal_cannot_delete_image_from_other_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 403
+    assert response.json()["success"] is False
 
 
 def test_principal_can_set_cover_image(client) -> None:
@@ -120,7 +128,8 @@ def test_principal_can_set_cover_image(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json()["is_cover"] is True
+    assert response.json()["success"] is True
+    assert response.json()["data"]["is_cover"] is True
 
 
 def test_principal_cannot_set_cover_image_for_other_school(client) -> None:
@@ -138,6 +147,7 @@ def test_principal_cannot_set_cover_image_for_other_school(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 403
+    assert response.json()["success"] is False
 
 
 def test_get_school_images_returns_list(client) -> None:
@@ -154,5 +164,6 @@ def test_get_school_images_returns_list(client) -> None:
         response = client.get(f"/api/v1/schools/{school_id}/images")
 
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
-    assert len(response.json()) == 2
+    assert response.json()["success"] is True
+    assert isinstance(response.json()["data"], list)
+    assert len(response.json()["data"]) == 2

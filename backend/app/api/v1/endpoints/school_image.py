@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.dependencies.auth import get_current_user
 from app.db.session import get_db
 from app.models.user import User
+from app.schemas.common import APIResponse
 from app.schemas.school_image import ImageCreateResponse, ImageDeleteResponse, SchoolImageResponse
 from app.services.s3_service import upload_file
 from app.services.school_image_service import (
@@ -16,6 +17,7 @@ from app.services.school_image_service import (
     get_school_images,
     set_cover_image,
 )
+from app.utils.responses import success_response
 
 
 router = APIRouter()
@@ -23,7 +25,7 @@ router = APIRouter()
 
 @router.post(
     "/schools/{school_id}/images",
-    response_model=ImageCreateResponse,
+    response_model=APIResponse[ImageCreateResponse],
     status_code=status.HTTP_201_CREATED,
 )
 def upload_school_image(
@@ -31,7 +33,7 @@ def upload_school_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> ImageCreateResponse:
+) -> dict:
     if current_user.role == "principal" and current_user.school_id != school_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -45,15 +47,15 @@ def upload_school_image(
 
     image_url = upload_file(file, f"schools/{school_id}")
     image = create_school_image(db, school_id, image_url=image_url, is_cover=False)
-    return image
+    return success_response(data=image, message="Image uploaded successfully")
 
 
-@router.delete("/images/{image_id}", response_model=ImageDeleteResponse)
+@router.delete("/images/{image_id}", response_model=APIResponse[ImageDeleteResponse])
 def delete_image(
     image_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> ImageDeleteResponse:
+) -> dict:
     image = get_school_image_by_id(db, image_id)
     if image is None:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -75,15 +77,18 @@ def delete_image(
     if not deleted:
         raise HTTPException(status_code=404, detail="Image not found")
 
-    return ImageDeleteResponse(message="Image deleted")
+    return success_response(
+        data=ImageDeleteResponse(message="Image deleted"),
+        message="Image deleted",
+    )
 
 
-@router.put("/images/{image_id}/cover", response_model=SchoolImageResponse)
+@router.put("/images/{image_id}/cover", response_model=APIResponse[SchoolImageResponse])
 def set_school_cover_image(
     image_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-) -> SchoolImageResponse:
+) -> dict:
     image = get_school_image_by_id(db, image_id)
     if image is None:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -105,17 +110,20 @@ def set_school_cover_image(
     if updated_image is None:
         raise HTTPException(status_code=404, detail="Image not found")
 
-    return updated_image
+    return success_response(data=updated_image, message="Cover image updated successfully")
 
 
-@router.get("/schools/{school_id}/images", response_model=list[SchoolImageResponse])
-def list_school_images(school_id: UUID, db: Session = Depends(get_db)) -> list[SchoolImageResponse]:
-    return get_school_images(db, school_id)
+@router.get("/schools/{school_id}/images", response_model=APIResponse[list[SchoolImageResponse]])
+def list_school_images(school_id: UUID, db: Session = Depends(get_db)) -> dict:
+    return success_response(
+        data=get_school_images(db, school_id),
+        message="Images retrieved successfully",
+    )
 
 
-@router.get("/schools/{school_id}/images/cover", response_model=SchoolImageResponse)
-def retrieve_cover_image(school_id: UUID, db: Session = Depends(get_db)) -> SchoolImageResponse:
+@router.get("/schools/{school_id}/images/cover", response_model=APIResponse[SchoolImageResponse])
+def retrieve_cover_image(school_id: UUID, db: Session = Depends(get_db)) -> dict:
     image = get_cover_image(db, school_id)
     if image is None:
         raise HTTPException(status_code=404, detail="Cover image not found")
-    return image
+    return success_response(data=image, message="Cover image retrieved successfully")

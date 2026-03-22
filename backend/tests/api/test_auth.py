@@ -21,8 +21,12 @@ def test_login_returns_access_token_for_valid_credentials(client) -> None:
 
     assert response.status_code == 200
     assert response.json() == {
+        "success": True,
+        "message": "Login successful",
+        "data": {
         "access_token": "jwt-token",
         "token_type": "bearer",
+        },
     }
 
 
@@ -56,7 +60,9 @@ def test_admin_can_create_principal_user(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 201
-    assert response.json() == {
+    assert response.json()["success"] is True
+    assert response.json()["message"] == "User created successfully"
+    assert response.json()["data"] == {
         "id": str(created_user.id),
         "name": "Principal User",
         "email": "principal@example.com",
@@ -81,7 +87,8 @@ def test_admin_can_activate_user(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json()["is_active"] is True
+    assert response.json()["success"] is True
+    assert response.json()["data"]["is_active"] is True
 
 
 def test_admin_can_deactivate_user(client) -> None:
@@ -99,4 +106,5 @@ def test_admin_can_deactivate_user(client) -> None:
             app.dependency_overrides.pop(get_current_user, None)
 
     assert response.status_code == 200
-    assert response.json()["is_active"] is False
+    assert response.json()["success"] is True
+    assert response.json()["data"]["is_active"] is False

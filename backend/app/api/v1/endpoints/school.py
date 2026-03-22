@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.school import SchoolListResponse, SchoolResponse, StudentStatsResponse
+from app.schemas.school import SchoolListResponse, SchoolResponse
 from app.services.school_service import get_school_by_id, search_schools
 
 
@@ -47,28 +47,3 @@ def retrieve_school(school_id: UUID, db: Session = Depends(get_db)) -> SchoolRes
     if school is None:
         raise HTTPException(status_code=404, detail="School not found")
     return school
-
-
-@router.get("/schools/{school_id}/students", response_model=StudentStatsResponse)
-def retrieve_student_stats(
-    school_id: UUID,
-    db: Session = Depends(get_db),
-) -> StudentStatsResponse:
-    school = get_school_by_id(db, school_id)
-    if school is None:
-        raise HTTPException(status_code=404, detail="School not found")
-
-    if isinstance(school, dict):
-        total_students = school["total_students"]
-        boys = school["boys"]
-        girls = school["girls"]
-    else:
-        total_students = school.total_students
-        boys = school.boys
-        girls = school.girls
-
-    return StudentStatsResponse(
-        total=total_students,
-        boys=boys,
-        girls=girls,
-    )

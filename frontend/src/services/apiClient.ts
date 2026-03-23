@@ -14,6 +14,13 @@ export const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
   const token = getAccessToken();
+  const rawUrl = config.url ?? "";
+
+  if (rawUrl) {
+    config.url = rawUrl
+      .replace(/^\/+api\/v1/, "")
+      .replace(/^\/+/, "/");
+  }
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

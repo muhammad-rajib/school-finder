@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { searchSchools } from "../../services/schoolApi";
 import { AdvancedFilters } from "./AdvancedFilters";
@@ -16,6 +16,7 @@ type SearchBarProps = {
   initialValue?: Partial<SearchFilters>;
   loading?: boolean;
   onSearch?: (filters: SearchFilters) => void;
+  compact?: boolean;
 };
 
 const emptyFilters: SearchFilters = {
@@ -26,7 +27,13 @@ const emptyFilters: SearchFilters = {
   name: ""
 };
 
-export function SearchBar({ initialValue, loading = false, onSearch }: SearchBarProps) {
+export function SearchBar({
+  initialValue,
+  loading = false,
+  onSearch,
+  compact = false
+}: SearchBarProps) {
+  const location = useLocation();
   const navigate = useNavigate();
   const [filters, setFilters] = useState<SearchFilters>({ ...emptyFilters, ...initialValue });
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -51,9 +58,22 @@ export function SearchBar({ initialValue, loading = false, onSearch }: SearchBar
     });
   };
 
+  const handleClearFilters = () => {
+    setFilters(emptyFilters);
+    setShowAdvanced(false);
+    onSearch?.(emptyFilters);
+
+    if (location.pathname === "/results") {
+      navigate("/results");
+      return;
+    }
+
+    navigate("/");
+  };
+
   return (
     <form
-      className="search-panel"
+      className={`search-panel ${compact ? "search-panel-compact" : ""}`}
       onSubmit={async (event) => {
         event.preventDefault();
         const nextFilters = { ...filters, name: filters.name.trim() };
@@ -103,6 +123,13 @@ export function SearchBar({ initialValue, loading = false, onSearch }: SearchBar
           onClick={() => setShowAdvanced((current) => !current)}
         >
           {showAdvanced ? "Hide Filters" : "Advanced Filters"}
+        </button>
+        <button
+          className="button secondary clear-filters"
+          type="button"
+          onClick={handleClearFilters}
+        >
+          Clear Filters
         </button>
       </div>
 

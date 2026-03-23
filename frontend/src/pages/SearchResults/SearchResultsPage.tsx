@@ -4,8 +4,10 @@ import { useLocation } from "react-router-dom";
 import type { School, SchoolSearchParams } from "../../features/school/types";
 import { searchSchools } from "../../services/schoolApi";
 import { AppShell } from "../../shared/components/AppShell";
+import { Container } from "../../shared/components/Container";
 import { EmptyState } from "../../shared/components/EmptyState";
 import { ErrorMessage } from "../../shared/components/ErrorMessage";
+import { Hero } from "../../shared/components/Hero";
 import { LoadingBlock } from "../../shared/components/LoadingBlock";
 import { SearchBar, type SearchFilters } from "../Home/SearchBar";
 import { SchoolCard } from "./components/SchoolCard";
@@ -60,19 +62,14 @@ export function SearchResultsPage() {
   return (
     <AppShell>
       <div className="results-page">
-        <div className="container results-layout">
-          <section className="results-toolbar">
-            <div className="results-heading">
-              <span className="home-kicker">School Search</span>
-              <h1>Search Results</h1>
-              <p className="muted">
-                {hasActiveFilters
-                  ? `${data.length} school${data.length === 1 ? "" : "s"} found`
-                  : "Start with a school name or open advanced filters"}
-              </p>
-            </div>
-            <SearchBar initialValue={filters} loading={loading} />
-          </section>
+        <Container className="results-layout">
+          <Hero mode="results" />
+          <SearchBar initialValue={filters} loading={loading} compact />
+          <p className="muted results-count">
+            {hasActiveFilters
+              ? `${data.length} school${data.length === 1 ? "" : "s"} found`
+              : "Start with a school name or open advanced filters"}
+          </p>
 
           {loading ? <LoadingBlock label="Searching..." /> : null}
           {error ? <ErrorMessage message={error} /> : null}
@@ -91,7 +88,7 @@ export function SearchResultsPage() {
               description="Try a broader school name or adjust the advanced filters."
             />
           ) : null}
-        </div>
+        </Container>
       </div>
     </AppShell>
   );

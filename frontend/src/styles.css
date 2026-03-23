@@ -218,9 +218,159 @@ select {
   color: #52607a;
 }
 
+.home-modern {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(226, 242, 255, 0.8), transparent 28%),
+    radial-gradient(circle at top right, rgba(222, 247, 236, 0.85), transparent 26%),
+    #f8fafc;
+}
+
+.home-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 0 0;
+}
+
+.home-brand {
+  font-size: 1.1rem;
+}
+
+.home-login {
+  min-width: 112px;
+  text-align: center;
+}
+
+.home-stack {
+  display: grid;
+  gap: 32px;
+}
+
+.home-hero {
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  text-align: center;
+  padding: 48px 0 8px;
+}
+
+.home-copy {
+  display: grid;
+  gap: 14px;
+  max-width: 700px;
+}
+
+.home-kicker {
+  display: inline-flex;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #dbe4f0;
+  color: #4b6480;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.home-copy h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 4.4rem);
+  line-height: 1.05;
+}
+
+.home-copy p {
+  margin: 0;
+  color: #52607a;
+  font-size: 1.05rem;
+}
+
+.home-search-shell {
+  width: 100%;
+}
+
+.travel-search {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #dbe4f0;
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(20, 33, 61, 0.08);
+}
+
+.search-field {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.search-field label {
+  color: #52607a;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.search-field .input {
+  min-height: 52px;
+  border-radius: 18px;
+  border-color: #dbe4f0;
+}
+
+.search-field-name {
+  min-width: 0;
+}
+
+.search-submit {
+  min-height: 52px;
+  padding-inline: 24px;
+  border-radius: 18px;
+}
+
+.home-results {
+  display: grid;
+  gap: 20px;
+}
+
 @media (max-width: 900px) {
   .hero,
   .dashboard {
     grid-template-columns: 1fr;
+  }
+
+  .travel-search {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-navbar {
+    padding-top: 16px;
+  }
+
+  .home-hero {
+    padding-top: 28px;
+    text-align: left;
+    justify-items: stretch;
+  }
+
+  .home-copy {
+    max-width: none;
+  }
+
+  .home-kicker {
+    margin: 0;
+  }
+
+  .travel-search {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    border-radius: 22px;
   }
 }

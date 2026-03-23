@@ -32,6 +32,7 @@ export type SchoolSearchParams = {
   division?: string;
   district?: string;
   upazila?: string;
+  union?: string;
   page?: number;
   limit?: number;
 };

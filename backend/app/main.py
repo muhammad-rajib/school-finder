@@ -10,12 +10,17 @@ from app.utils.responses import error_response, success_response
 
 
 settings = get_settings()
+allowed_origins = {
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    *[origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()],
+}
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()],
+    allow_origins=sorted(allowed_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,6 +59,7 @@ async def unhandled_exception_handler(_: Request, __: Exception) -> JSONResponse
 
 
 @app.get("/")
+@app.get("/health")
 def health_check() -> dict[str, object]:
     db_connected = False
 

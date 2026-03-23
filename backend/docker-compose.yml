@@ -1,6 +1,10 @@
 services:
   backend:
     build: .
+    env_file:
+      - .env
+    environment:
+      - RUN_ENV=docker
     ports:
       - "8000:8000"
     depends_on:
@@ -10,8 +14,8 @@ services:
     image: postgres:16
     environment:
       POSTGRES_DB: schoolfinder
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: schoolfinder_user
+      POSTGRES_PASSWORD: password123
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

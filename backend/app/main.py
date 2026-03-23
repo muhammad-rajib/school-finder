@@ -1,3 +1,6 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,18 +8,22 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
-from app.db.session import check_db_connection
 from app.utils.responses import error_response, success_response
 
 
 settings = get_settings()
-allowed_origins = {
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    *[origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()],
-}
+allowed_origins = settings.allowed_origins_list
+logger = logging.getLogger(__name__)
 
-app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    logger.info("SchoolFinder starting with RUN_ENV=%s", settings.RUN_ENV)
+    logger.info("Database URL=%s", settings.masked_database_url)
+    logger.info("Allowed origins=%s", ", ".join(allowed_origins))
+    yield
+
+
+app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG, lifespan=lifespan)
 app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
@@ -61,14 +68,7 @@ async def unhandled_exception_handler(_: Request, __: Exception) -> JSONResponse
 @app.get("/")
 @app.get("/health")
 def health_check() -> dict[str, object]:
-    db_connected = False
-
-    try:
-        db_connected = check_db_connection()
-    except Exception:
-        db_connected = False
-
     return success_response(
-        data={"status": "ok", "database_connected": db_connected},
+        data={"status": "ok"},
         message="Health check successful",
     )

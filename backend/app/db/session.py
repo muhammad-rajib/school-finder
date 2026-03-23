@@ -6,7 +6,7 @@ from app.core.config import get_settings
 
 def _get_engine():
     settings = get_settings()
-    return create_engine(settings.DATABASE_URL)
+    return create_engine(settings.effective_database_url)
 
 
 engine = _get_engine()

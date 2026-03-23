@@ -33,3 +33,9 @@ class SchoolListResponse(BaseModel):
     schools: list[SchoolResponse]
     page: int
     limit: int
+
+
+class SchoolSearchResponse(BaseModel):
+    success: bool
+    data: list[SchoolResponse]
+    total: int

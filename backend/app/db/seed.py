@@ -234,7 +234,6 @@ def seed_data() -> None:
     try:
         existing_school_count = session.query(School).count()
         if existing_school_count >= 20:
-            print(f"Seed skipped: database already contains {existing_school_count} schools.")
             return
 
         schools_to_create = 20 - existing_school_count
@@ -252,7 +251,6 @@ def seed_data() -> None:
             session.add_all(teachers + results + notices + images)
 
         session.commit()
-        print(f"Seed completed successfully with {schools_to_create} new schools.")
     except Exception:
         session.rollback()
         raise

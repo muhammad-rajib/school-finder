@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.common import APIResponse
-from app.schemas.school import SchoolListResponse, SchoolResponse
+from app.schemas.school import SchoolResponse, SchoolSearchResponse
 from app.services.school_service import get_school_by_id, search_schools
 from app.utils.responses import success_response
 
@@ -13,7 +13,7 @@ from app.utils.responses import success_response
 router = APIRouter()
 
 
-@router.get("/schools", response_model=APIResponse[SchoolListResponse])
+@router.get("/schools", response_model=SchoolSearchResponse)
 def list_schools(
     name: str | None = Query(default=None),
     division: str | None = Query(default=None),
@@ -40,10 +40,11 @@ def list_schools(
         limit=1 if emis_code else effective_limit,
     )
 
-    return success_response(
-        data=SchoolListResponse(schools=schools, page=page, limit=effective_limit),
-        message="Schools retrieved successfully",
-    )
+    return {
+        "success": True,
+        "data": schools,
+        "total": len(schools),
+    }
 
 
 @router.get("/schools/{school_id}", response_model=APIResponse[SchoolResponse])

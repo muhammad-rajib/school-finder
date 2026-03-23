@@ -34,6 +34,35 @@ def test_search_schools_applies_filters_and_pagination() -> None:
     query.limit.assert_called_once_with(10)
 
 
+def test_search_schools_ignores_empty_filter_values() -> None:
+    db = MagicMock()
+    query = MagicMock()
+    db.query.return_value = query
+    query.filter.return_value = query
+    query.order_by.return_value = query
+    query.offset.return_value = query
+    query.limit.return_value = query
+    query.all.return_value = []
+
+    result = search_schools(
+        db=db,
+        name="   ",
+        division=" ",
+        district=None,
+        upazila="",
+        union="   ",
+        emis_code=None,
+        skip=0,
+        limit=10,
+    )
+
+    assert result == []
+    query.filter.assert_not_called()
+    query.order_by.assert_called_once()
+    query.offset.assert_called_once_with(0)
+    query.limit.assert_called_once_with(10)
+
+
 def test_get_school_by_id_returns_first_match() -> None:
     db = MagicMock()
     query = MagicMock()

@@ -4,7 +4,7 @@ from uuid import uuid4
 from tests.fixtures.test_data import build_school_data
 
 
-def test_get_schools_returns_paginated_response(client) -> None:
+def test_get_schools_returns_results_when_no_filter_is_provided(client) -> None:
     sample_schools = [build_school_data()]
 
     with patch("app.api.v1.endpoints.school.search_schools", return_value=sample_schools):
@@ -12,15 +12,10 @@ def test_get_schools_returns_paginated_response(client) -> None:
 
     assert response.status_code == 200
     assert response.json()["success"] is True
-    assert response.json()["message"] == "Schools retrieved successfully"
-    assert isinstance(response.json()["data"]["schools"], list)
-    assert response.json()["data"]["schools"][0]["country_code"] == "BD"
-    assert (
-        response.json()["data"]["schools"][0]["description"]
-        == "A leading secondary school in central Dhaka."
-    )
-    assert response.json()["data"]["page"] == 1
-    assert response.json()["data"]["limit"] == 10
+    assert isinstance(response.json()["data"], list)
+    assert response.json()["data"][0]["country_code"] == "BD"
+    assert response.json()["data"][0]["description"] == "A leading secondary school in central Dhaka."
+    assert response.json()["total"] == 1
 
 
 def test_get_school_by_id_returns_school_when_found(client) -> None:
@@ -81,9 +76,7 @@ def test_search_schools_by_name(client) -> None:
         response = client.get("/api/v1/schools?name=kaliganj")
 
     assert response.status_code == 200
-    assert any(
-        school["name"] == "Kaliganj Govt School" for school in response.json()["data"]["schools"]
-    )
+    assert any(school["name"] == "Kaliganj Govt School" for school in response.json()["data"])
     mock_search.assert_called_once_with(
         db=ANY,
         name="kaliganj",
@@ -104,7 +97,7 @@ def test_search_schools_by_emis_code_returns_exact_match(client) -> None:
         response = client.get("/api/v1/schools?emis_code=123456")
 
     assert response.status_code == 200
-    assert response.json()["data"]["schools"][0]["emis_code"] == "123456"
+    assert response.json()["data"][0]["emis_code"] == "123456"
     mock_search.assert_called_once_with(
         db=ANY,
         name=None,
@@ -118,77 +111,80 @@ def test_search_schools_by_emis_code_returns_exact_match(client) -> None:
     )
 
 
-def test_search_schools_by_location_filters(client) -> None:
+def test_search_schools_with_only_division_filter(client) -> None:
     sample_school = build_school_data(
         name="Location Match School",
         division="Dhaka",
-        district="Gazipur",
-        upazila="Kaliganj",
     )
 
     with patch("app.api.v1.endpoints.school.search_schools", return_value=[sample_school]) as mock_search:
-        response = client.get(
-            "/api/v1/schools?division=Dhaka&district=Gazipur&upazila=Kaliganj"
-        )
+        response = client.get("/api/v1/schools?division=Dhaka")
 
     assert response.status_code == 200
-    assert response.json()["data"]["schools"][0]["district"] == "Gazipur"
-    assert response.json()["data"]["schools"][0]["upazila"] == "Kaliganj"
+    assert response.json()["data"][0]["division"] == "Dhaka"
     mock_search.assert_called_once_with(
         db=ANY,
         name=None,
         division="Dhaka",
-        district="Gazipur",
-        upazila="Kaliganj",
-        union=None,
-        emis_code=None,
-        skip=0,
-        limit=10,
-    )
-
-
-def test_search_schools_with_combined_filters(client) -> None:
-    sample_school = build_school_data(name="Kaliganj Govt School", district="Gazipur")
-
-    with patch("app.api.v1.endpoints.school.search_schools", return_value=[sample_school]) as mock_search:
-        response = client.get("/api/v1/schools?name=kaliganj&district=Gazipur")
-
-    assert response.status_code == 200
-    assert response.json()["data"]["schools"][0]["name"] == "Kaliganj Govt School"
-    assert response.json()["data"]["schools"][0]["district"] == "Gazipur"
-    mock_search.assert_called_once_with(
-        db=ANY,
-        name="kaliganj",
-        division=None,
-        district="Gazipur",
-        upazila=None,
-        union=None,
-        emis_code=None,
-        skip=0,
-        limit=10,
-    )
-
-
-def test_search_schools_with_pagination(client) -> None:
-    sample_schools = [build_school_data(name=f"School {index}") for index in range(1, 6)]
-
-    with patch("app.api.v1.endpoints.school.search_schools", return_value=sample_schools) as mock_search:
-        response = client.get("/api/v1/schools?page=1&limit=5")
-
-    assert response.status_code == 200
-    assert len(response.json()["data"]["schools"]) == 5
-    assert response.json()["data"]["page"] == 1
-    assert response.json()["data"]["limit"] == 5
-    mock_search.assert_called_once_with(
-        db=ANY,
-        name=None,
-        division=None,
         district=None,
         upazila=None,
         union=None,
         emis_code=None,
         skip=0,
-        limit=5,
+        limit=10,
+    )
+
+
+def test_search_schools_with_division_and_district_filters(client) -> None:
+    sample_school = build_school_data(name="Kaliganj Govt School", division="Dhaka", district="Gazipur")
+
+    with patch("app.api.v1.endpoints.school.search_schools", return_value=[sample_school]) as mock_search:
+        response = client.get("/api/v1/schools?division=Dhaka&district=Gazipur")
+
+    assert response.status_code == 200
+    assert response.json()["data"][0]["division"] == "Dhaka"
+    assert response.json()["data"][0]["district"] == "Gazipur"
+    mock_search.assert_called_once_with(
+        db=ANY,
+        name=None,
+        division="Dhaka",
+        district="Gazipur",
+        upazila=None,
+        union=None,
+        emis_code=None,
+        skip=0,
+        limit=10,
+    )
+
+
+def test_search_schools_with_full_filter(client) -> None:
+    sample_school = build_school_data(
+        name="Kaliganj Govt School",
+        division="Dhaka",
+        district="Gazipur",
+        upazila="Kaliganj",
+        union="Tumlia",
+    )
+
+    with patch("app.api.v1.endpoints.school.search_schools", return_value=[sample_school]) as mock_search:
+        response = client.get(
+            "/api/v1/schools?division=Dhaka&district=Gazipur&upazila=Kaliganj&union=Tumlia&name=kaliganj"
+        )
+
+    assert response.status_code == 200
+    assert response.json()["data"][0]["name"] == "Kaliganj Govt School"
+    assert response.json()["data"][0]["union"] == "Tumlia"
+    assert response.json()["total"] == 1
+    mock_search.assert_called_once_with(
+        db=ANY,
+        name="kaliganj",
+        division="Dhaka",
+        district="Gazipur",
+        upazila="Kaliganj",
+        union="Tumlia",
+        emis_code=None,
+        skip=0,
+        limit=10,
     )
 
 
@@ -197,4 +193,5 @@ def test_search_schools_returns_no_result_for_unknown_query(client) -> None:
         response = client.get("/api/v1/schools?name=unknown-school")
 
     assert response.status_code == 200
-    assert response.json()["data"]["schools"] == []
+    assert response.json()["data"] == []
+    assert response.json()["total"] == 0

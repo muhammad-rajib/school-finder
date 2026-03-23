@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
+import { searchSchools } from "../../services/schoolApi";
 import { AdvancedFilters } from "./AdvancedFilters";
 
 export type SearchFilters = {
@@ -13,7 +15,7 @@ export type SearchFilters = {
 type SearchBarProps = {
   initialValue?: Partial<SearchFilters>;
   loading?: boolean;
-  onSearch: (filters: SearchFilters) => void;
+  onSearch?: (filters: SearchFilters) => void;
 };
 
 const emptyFilters: SearchFilters = {
@@ -25,21 +27,14 @@ const emptyFilters: SearchFilters = {
 };
 
 export function SearchBar({ initialValue, loading = false, onSearch }: SearchBarProps) {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<SearchFilters>({ ...emptyFilters, ...initialValue });
-  const [debouncedName, setDebouncedName] = useState(filters.name);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setFilters({ ...emptyFilters, ...initialValue });
   }, [initialValue]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedName(filters.name.trim());
-    }, 300);
-
-    return () => window.clearTimeout(timer);
-  }, [filters.name]);
 
   const updateField = (field: keyof SearchFilters, value: string) => {
     setFilters((current) => {
@@ -59,9 +54,28 @@ export function SearchBar({ initialValue, loading = false, onSearch }: SearchBar
   return (
     <form
       className="search-panel"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
-        onSearch({ ...filters, name: debouncedName });
+        const nextFilters = { ...filters, name: filters.name.trim() };
+        const params = new URLSearchParams();
+
+        Object.entries(nextFilters).forEach(([key, value]) => {
+          if (value.trim()) {
+            params.set(key, value.trim());
+          }
+        });
+
+        setSubmitting(true);
+        try {
+          await searchSchools(nextFilters);
+          onSearch?.(nextFilters);
+          navigate({
+            pathname: "/results",
+            search: params.toString()
+          });
+        } finally {
+          setSubmitting(false);
+        }
       }}
     >
       <div className="search-primary">
@@ -77,8 +91,8 @@ export function SearchBar({ initialValue, loading = false, onSearch }: SearchBar
           />
         </div>
 
-        <button className="button search-submit" disabled={loading} type="submit">
-          {loading ? "Searching..." : "Search"}
+        <button className="button search-submit" disabled={loading || submitting} type="submit">
+          {loading || submitting ? "Searching..." : "Search"}
         </button>
       </div>
 

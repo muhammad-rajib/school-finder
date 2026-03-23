@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import type { School, SchoolSearchParams } from "../../features/school/types";
 import { searchSchools } from "../../services/schoolApi";
@@ -8,7 +8,7 @@ import { EmptyState } from "../../shared/components/EmptyState";
 import { ErrorMessage } from "../../shared/components/ErrorMessage";
 import { LoadingBlock } from "../../shared/components/LoadingBlock";
 import { SearchBar, type SearchFilters } from "../Home/SearchBar";
-import { SchoolCard } from "./SchoolCard";
+import { SchoolCard } from "./components/SchoolCard";
 
 function queryToFilters(search: string): SearchFilters {
   const params = new URLSearchParams(search);
@@ -24,8 +24,7 @@ function queryToFilters(search: string): SearchFilters {
 
 export function SearchResultsPage() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [schools, setSchools] = useState<School[]>([]);
+  const [data, setData] = useState<School[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,9 +40,8 @@ export function SearchResultsPage() {
       setError(null);
 
       try {
-        const payload = await searchSchools({ ...params, page: 1, limit: 20 });
-        const results = Array.isArray(payload) ? payload : payload.schools;
-        setSchools(results);
+        const results = await searchSchools({ ...params, page: 1, limit: 20 });
+        setData(results);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load schools");
       } finally {
@@ -52,27 +50,12 @@ export function SearchResultsPage() {
     };
 
     if (!hasActiveFilters) {
-      setSchools([]);
+      setData([]);
       return;
     }
 
     void loadSchools(filters);
   }, [filters, hasActiveFilters]);
-
-  const handleSearch = (nextFilters: SearchFilters) => {
-    const params = new URLSearchParams();
-
-    Object.entries(nextFilters).forEach(([key, value]) => {
-      if (value.trim()) {
-        params.set(key, value.trim());
-      }
-    });
-
-    navigate({
-      pathname: "/results",
-      search: params.toString()
-    });
-  };
 
   return (
     <AppShell>
@@ -84,25 +67,25 @@ export function SearchResultsPage() {
               <h1>Search Results</h1>
               <p className="muted">
                 {hasActiveFilters
-                  ? `${schools.length} school${schools.length === 1 ? "" : "s"} found`
+                  ? `${data.length} school${data.length === 1 ? "" : "s"} found`
                   : "Start with a school name or open advanced filters"}
               </p>
             </div>
-            <SearchBar initialValue={filters} loading={loading} onSearch={handleSearch} />
+            <SearchBar initialValue={filters} loading={loading} />
           </section>
 
           {loading ? <LoadingBlock label="Searching..." /> : null}
           {error ? <ErrorMessage message={error} /> : null}
 
-          {!loading && !error && hasActiveFilters && schools.length > 0 ? (
+          {!loading && !error && hasActiveFilters && data.length > 0 ? (
             <section className="results-list">
-              {schools.map((school) => (
+              {data.map((school) => (
                 <SchoolCard key={school.id} school={school} />
               ))}
             </section>
           ) : null}
 
-          {!loading && !error && hasActiveFilters && schools.length === 0 ? (
+          {!loading && !error && hasActiveFilters && data.length === 0 ? (
             <EmptyState
               title="No schools found"
               description="Try a broader school name or adjust the advanced filters."

@@ -14,7 +14,10 @@ export async function getSchools(params: SchoolSearchParams = {}) {
 }
 
 export async function searchSchools(params: SchoolSearchParams = {}) {
-  return getSchools(params);
+  const query = buildQuery(params);
+  const path = query ? `/schools?${query}` : "/schools";
+  const response = await apiClient.get<ApiResponse<School[]>>(path);
+  return response.data.data;
 }
 
 export async function getSchoolDetails(schoolId: string) {

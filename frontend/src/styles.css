@@ -36,7 +36,8 @@ select {
 }
 
 .container {
-  width: min(900px, calc(100% - 32px));
+  width: min(100%, calc(100% - 32px));
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -44,9 +45,9 @@ select {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
 
 .topbar-inner {
@@ -54,7 +55,7 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 0;
+  padding: 16px;
 }
 
 .brand {
@@ -72,6 +73,7 @@ select {
   border: 0;
   border-radius: 14px;
   padding: 12px 16px;
+  min-height: 48px;
   background: #0f766e;
   color: #ffffff;
   cursor: pointer;
@@ -116,7 +118,13 @@ select {
 .page,
 .discover-page,
 .results-page {
-  padding: 32px 0 64px;
+  padding: 24px 0 48px;
+}
+
+.discover-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
 }
 
 .card {
@@ -168,16 +176,17 @@ select {
 
 .discover-hero {
   display: grid;
-  gap: 28px;
+  gap: 24px;
   justify-items: center;
   text-align: center;
-  padding-top: 36px;
+  width: 100%;
+  padding: 16px;
 }
 
 .discover-copy {
   display: grid;
   gap: 14px;
-  max-width: 720px;
+  max-width: 900px;
 }
 
 .home-kicker {
@@ -197,14 +206,14 @@ select {
 .discover-copy h1,
 .results-heading h1 {
   margin: 0;
-  font-size: clamp(2.1rem, 5vw, 3.8rem);
+  font-size: clamp(1.9rem, 7vw, 3.8rem);
   line-height: 1.05;
 }
 
 .discover-copy p,
 .results-heading p {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   color: #6b7280;
 }
 
@@ -226,7 +235,7 @@ select {
 
 .search-primary {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr;
   gap: 12px;
   align-items: end;
 }
@@ -237,7 +246,7 @@ select {
 }
 
 .advanced-toggle {
-  width: fit-content;
+  width: 100%;
 }
 
 .search-field {
@@ -267,13 +276,14 @@ select {
 
 .advanced-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
   padding-top: 4px;
 }
 
 .search-submit {
-  min-width: 132px;
+  width: 100%;
+  min-width: 0;
 }
 
 .results-layout {
@@ -293,14 +303,20 @@ select {
 
 .result-card {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
   padding: 16px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 20px;
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+  margin-bottom: 14px;
+}
+
+.result-card-main {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .result-card-body {
@@ -310,7 +326,7 @@ select {
 
 .result-card-body h2 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
 }
 
 .result-location {
@@ -319,15 +335,9 @@ select {
   font-weight: 700;
 }
 
-.result-description {
-  margin: 0;
-  color: #6b7280;
-  line-height: 1.5;
-}
-
 .result-card-actions {
   display: flex;
-  justify-content: flex-start;
+  justify-content: stretch;
 }
 
 .empty-state {
@@ -362,35 +372,64 @@ select {
   padding: 24px;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 640px) {
+  .page,
+  .discover-page,
+  .results-page {
+    padding: 32px 0 56px;
+  }
+
+  .discover-hero {
+    gap: 28px;
+  }
+
+  .discover-copy p,
+  .results-heading p {
+    font-size: 1.05rem;
+  }
+
   .search-primary,
-  .advanced-grid,
-  .dashboard {
-    grid-template-columns: 1fr;
+  .advanced-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
-  .button,
-  .search-submit,
   .advanced-toggle,
-  .nav-cta {
-    width: 100%;
+  .search-submit {
+    width: auto;
   }
 
-  .topbar-inner {
-    align-items: stretch;
-  }
-
-  .discover-hero,
-  .results-heading {
-    text-align: left;
-    justify-items: stretch;
-  }
-
-  .home-kicker {
-    margin: 0;
+  .result-card-main {
+    flex-direction: row;
+    align-items: center;
   }
 
   .result-card-actions {
-    justify-content: stretch;
+    justify-content: flex-start;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 960px;
+  }
+
+  .page,
+  .discover-page,
+  .results-page {
+    padding: 40px 0 72px;
+  }
+
+  .discover-copy h1,
+  .results-heading h1 {
+    font-size: clamp(2.4rem, 4vw, 4rem);
+  }
+
+  .search-primary {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .advanced-grid,
+  .dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

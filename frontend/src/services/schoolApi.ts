@@ -13,6 +13,10 @@ export async function getSchools(params: SchoolSearchParams = {}) {
   return response.data.data;
 }
 
+export async function searchSchools(params: SchoolSearchParams = {}) {
+  return getSchools(params);
+}
+
 export async function getSchoolDetails(schoolId: string) {
   const response = await apiClient.get<ApiResponse<School>>(`/schools/${schoolId}`);
   return response.data.data;

@@ -4,9 +4,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.core.config import get_settings
 
 
-settings = get_settings()
+def _get_engine():
+    settings = get_settings()
+    return create_engine(settings.DATABASE_URL)
 
-engine = create_engine(settings.DATABASE_URL)
+
+engine = _get_engine()
 
 SessionLocal = sessionmaker(
     autocommit=False,

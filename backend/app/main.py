@@ -1,14 +1,25 @@
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.v1.router import api_router
+from app.core.config import get_settings
 from app.db.session import check_db_connection
 from app.utils.responses import error_response, success_response
 
 
-app = FastAPI()
+settings = get_settings()
+
+app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 app.include_router(api_router)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",") if origin.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.exception_handler(HTTPException)
